@@ -1,0 +1,44 @@
+version: "3.8"
+
+networks:
+  appnetwork:
+
+volumes:
+  db-store:
+  code:
+
+services:
+  web:
+    image: yaand/django-app:latest
+    restart: always
+    build:
+      context: .
+      dockerfile: ./infra/docker/python/Dockerfile
+      network: docker-django_appnetwork
+      args:
+        - POSTGRES_DB=${DB_NAME:-postgres}
+        - POSTGRES_USER=${DB_USER:-postgres}
+        - POSTGRES_PASSWORD=${DB_PASS:-secret}
+    command: python3 manage.py runserver 0.0.0.0:8000
+    volumes:
+      - code:/code
+    ports:
+      - "80:8000"
+    depends_on:
+      - db
+    networks:
+      - appnetwork
+
+  db:
+    image: postgres
+    restart: always
+    ports:
+      - 5432:5432
+    volumes:
+      - db-store:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=${DB_NAME:-postgres}
+      - POSTGRES_USER=${DB_USER:-postgres}
+      - POSTGRES_PASSWORD=${DB_PASS:-secret}
+    networks:
+      - appnetwork
