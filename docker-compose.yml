@@ -8,7 +8,7 @@ volumes:
   code:
 
 services:
-  web:
+  app:
     image: yaand/django-app:latest
     restart: always
     build:

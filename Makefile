@@ -1,14 +1,9 @@
 include .env
 
 install:
-	docker-compose run web django-admin startproject myproj .
-
-	docker-compose run web sed -i "s/'django.db.backends.sqlite3'/'django.db.backends.postgresql'/g" ./myproj/settings.py
-	echo "loaded: ${DB_NAME} ${DB_USER} ${DB_PASS}"
-	docker-compose run web sed -i "s#'NAME': BASE_DIR / 'db.sqlite3'#'NAME': '$${DB_NAME:-postgres}', 'USER': '$${DB_USER:-postgres}', 'PASSWORD': '$${DB_PASS:-secret}', 'HOST': 'db', 'PORT': 5432#g" ./myproj/settings.py
-	docker-compose run web cat myproj/settings.py
-
-	docker-compose up -d
+	export DOCKER_BUILDKIT=0
+	docker-compose up -d db
+	docker-compose up -d app
 
 up:
 	docker-compose up -d
