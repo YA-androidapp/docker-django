@@ -2,8 +2,10 @@ include .env
 
 install:
 	export DOCKER_BUILDKIT=0
+	docker-compose build --no-cache --force-rm db
 	docker-compose up -d db
-	docker-compose up -d --build app
+	docker-compose build --no-cache --force-rm app
+	docker-compose up -d app
 
 up:
 	docker-compose up -d
