@@ -7,6 +7,10 @@ install:
 	docker-compose build --no-cache --force-rm app
 	docker-compose up -d app
 
+reinstall:
+	@make destroy
+	@make install
+
 up:
 	docker-compose up -d
 build:

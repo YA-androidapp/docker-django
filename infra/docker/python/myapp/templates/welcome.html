@@ -1,0 +1,13 @@
+<!doctype html>
+{% extends "base.html" %}
+
+{% block title %}Welcome{% endblock %}
+
+{% block content %}
+<h2>Welcome</h2>
+{% if user.is_authenticated %}
+{% else %}
+<p><a href="{% url 'account_login' %}">Sign in</a></p>
+<p><a href="{% url 'account_signup' %}">Sign up</a></p>
+{% endif %}
+{% endblock %}
