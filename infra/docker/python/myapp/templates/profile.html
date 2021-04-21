@@ -1,0 +1,30 @@
+<!doctype html>
+{% extends "base.html" %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+    <div class="container">
+        <h1 class="display-3">Profile</h1>
+        {% if user.is_authenticated %}
+        Hi, {{ user.get_username }}!
+        <ul class="list-group">
+            <li class="list-group-item">date_joined: {{ user.date_joined }}</li>
+            <li class="list-group-item">email: {{ user.email }}</li>
+            <li class="list-group-item">first_name: {{ user.first_name }}</li>
+            <li class="list-group-item">id: {{ user.id }}</li>
+            <li class="list-group-item">is_active: {{ user.is_active }}</li>
+            <li class="list-group-item">is_staff: {{ user.is_staff }}</li>
+            <li class="list-group-item">is_superuser: {{ user.is_superuser }}</li>
+            <li class="list-group-item">last_login: {{ user.last_login }}</li>
+            <li class="list-group-item">last_name: {{ user.last_name }}</li>
+            <li class="list-group-item">password: {{ user.password }}</li>
+            <li class="list-group-item">username: {{ user.username }}</li>
+        </ul>
+        {% else %}
+        <a class="btn btn-primary btn-lg" role="button" href="{% url 'account_login' %}">Sign in</a>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

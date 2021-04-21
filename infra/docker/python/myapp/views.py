@@ -1,8 +1,8 @@
 from django.views import generic
 
 
-class HomeView(generic.TemplateView):
-    template_name = 'home.html'
+class ProfileView(generic.TemplateView):
+    template_name = 'profile.html'
 
 
 class WelcomeView(generic.TemplateView):

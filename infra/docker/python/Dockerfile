@@ -52,11 +52,14 @@ RUN echo "\nACCOUNT_ADAPTER = 'accounts.adapter.AccountAdapter'" >> ./myproj/set
     echo "\nACCOUNT_USERNAME_REQUIRED = False" >> ./myproj/settings.py && \
     echo "\nAUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend','allauth.account.auth_backends.AuthenticationBackend',)" >> ./myproj/settings.py && \
     echo "\nEMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'" >> ./myproj/settings.py && \
-    echo "\nLOGIN_REDIRECT_URL = 'myapp:home'" >> ./myproj/settings.py && \
+    echo "\nLOGIN_REDIRECT_URL = 'myapp:profile'" >> ./myproj/settings.py && \
     echo "\nSITE_ID = 1" >> ./myproj/settings.py && \
+    sed -i "s/TEMPLATES = \[/import os\nTEMPLATES = \[/g" ./myproj/settings.py && \
+    sed -i "s/'DIRS': \[\],/'DIRS': \[os.path.join(BASE_DIR, 'templates'),\],/g" ./myproj/settings.py && \
     sed -i "s/'django.contrib.staticfiles',/'django.contrib.staticfiles','django.contrib.sites','allauth','allauth.account','allauth.socialaccount',/g" ./myproj/settings.py && \
     sed -i "s/'django.template.context_processors.debug',/'django.template.context_processors.debug',\n                'django.template.context_processors.request',/g" ./myproj/settings.py && \
     sed -i "s#path('admin/', admin.site.urls),#path('admin/', admin.site.urls),\n    path('accounts/', include('allauth.urls')),#g" ./myproj/urls.py
+ADD ./infra/docker/python/templates/account/*.html /code/templates/account/
 RUN python manage.py migrate
 
 RUN sed -i "s#STATIC_URL = '/static/'#STATIC_URL = '/static/'\nSTATIC_ROOT = '/static'#g" ./myproj/settings.py && \
