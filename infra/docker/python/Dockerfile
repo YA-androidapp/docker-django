@@ -15,30 +15,21 @@ WORKDIR /code
 ADD ./infra/docker/python/requirements.txt /code/
 RUN pip install -r requirements.txt
 
+# myproj project
 RUN django-admin startproject myproj . && \
     sed -i "s/'django.db.backends.sqlite3'/'django.db.backends.postgresql'/g" ./myproj/settings.py && \
     sed -i "s#'NAME': BASE_DIR / 'db.sqlite3'#'NAME': '${POSTGRES_DB}', 'USER': '${POSTGRES_USER}', 'PASSWORD': '${POSTGRES_PASSWORD}', 'HOST': 'db', 'PORT': 5432#g" ./myproj/settings.py
 
-RUN python manage.py startapp myapp && \
-    sed -i "s/'django.contrib.staticfiles',/'django.contrib.staticfiles','myapp.apps.MyappConfig',/g" ./myproj/settings.py && \
-    sed -i "s/from django.urls import path/from django.urls import path, include/g" ./myproj/urls.py && \
-    sed -i "s#path('admin/', admin.site.urls),#path('admin/', admin.site.urls),\n    path('', include('myapp.urls')),#g" ./myproj/urls.py
-ADD ./infra/docker/python/myapp/models.py ./infra/docker/python/myapp/urls.py ./infra/docker/python/myapp/views.py /code/myapp/
-ADD ./infra/docker/python/myapp/templates/*.html /code/myapp/templates/
-ADD ./infra/docker/python/myapp/templates/myapp/*.html /code/myapp/templates/myapp/
-ADD ./infra/docker/python/myapp/fixtures/seeds.json /code/myapp/fixtures/
-
+# accounts app
 RUN python manage.py startapp accounts && \
     sed -i "s/'django.contrib.staticfiles',/'django.contrib.staticfiles','accounts.apps.AccountsConfig',/g" ./myproj/settings.py && \
     echo "\nAUTH_USER_MODEL = 'accounts.CustomUser'" >> ./myproj/settings.py && \
-    echo "from .models import CustomUser\n\nadmin.site.register(CustomUser)" >> ./accounts/admin.py && \
-    echo "from myapp.models import Category, Tag, Post\n\nadmin.site.register(Category)\nadmin.site.register(Tag)\nadmin.site.register(Post)" >> ./accounts/admin.py
+    echo "from .models import CustomUser\n\nadmin.site.register(CustomUser)" >> ./accounts/admin.py
 ADD ./infra/docker/python/accounts/*.py /code/accounts/
 RUN python manage.py makemigrations && \
     python manage.py migrate
 
-RUN python manage.py loaddata myapp/fixtures/seeds.json
-
+# createsuperuser
 RUN DJANGO_SUPERUSER_PASSWORD="Passw0rd#" \
     DJANGO_SUPERUSER_USERNAME="Admin" \
     DJANGO_SUPERUSER_EMAIL="admin@example.net" \
@@ -57,15 +48,30 @@ RUN echo "\nACCOUNT_ADAPTER = 'accounts.adapter.AccountAdapter'" >> ./myproj/set
     echo "\nACCOUNT_USERNAME_REQUIRED = False" >> ./myproj/settings.py && \
     echo "\nAUTHENTICATION_BACKENDS = ('django.contrib.auth.backends.ModelBackend','allauth.account.auth_backends.AuthenticationBackend',)" >> ./myproj/settings.py && \
     echo "\nEMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'" >> ./myproj/settings.py && \
-    echo "\nLOGIN_REDIRECT_URL = 'myapp:profile'" >> ./myproj/settings.py && \
     echo "\nSITE_ID = 1" >> ./myproj/settings.py && \
     sed -i "s/TEMPLATES = \[/import os\nTEMPLATES = \[/g" ./myproj/settings.py && \
     sed -i "s/'DIRS': \[\],/'DIRS': \[os.path.join(BASE_DIR, 'templates'),\],/g" ./myproj/settings.py && \
     sed -i "s/'django.contrib.staticfiles',/'django.contrib.staticfiles','django.contrib.sites','allauth','allauth.account','allauth.socialaccount',/g" ./myproj/settings.py && \
     sed -i "s/'django.template.context_processors.debug',/'django.template.context_processors.debug',\n                'django.template.context_processors.request',/g" ./myproj/settings.py && \
+    sed -i "s/from django.urls import path/from django.urls import path, include/g" ./myproj/urls.py && \
     sed -i "s#path('admin/', admin.site.urls),#path('admin/', admin.site.urls),\n    path('accounts/', include('allauth.urls')),#g" ./myproj/urls.py
 ADD ./infra/docker/python/templates/account/*.html /code/templates/account/
 RUN python manage.py migrate
 
+# myapp app
+RUN python manage.py startapp myapp && \
+    sed -i "s/'django.contrib.staticfiles',/'django.contrib.staticfiles','myapp.apps.MyappConfig',/g" ./myproj/settings.py && \
+    echo "\nLOGIN_REDIRECT_URL = 'myapp:profile'" >> ./myproj/settings.py && \
+    sed -i "s#path('admin/', admin.site.urls),#path('admin/', admin.site.urls),\n    path('', include('myapp.urls')),#g" ./myproj/urls.py && \
+    echo "from myapp.models import Category, Tag, Post\n\nadmin.site.register(Category)\nadmin.site.register(Tag)\nadmin.site.register(Post)" >> ./accounts/admin.py
+ADD ./infra/docker/python/myapp/models.py ./infra/docker/python/myapp/urls.py ./infra/docker/python/myapp/views.py /code/myapp/
+ADD ./infra/docker/python/myapp/templates/*.html /code/myapp/templates/
+ADD ./infra/docker/python/myapp/templates/myapp/*.html /code/myapp/templates/myapp/
+ADD ./infra/docker/python/myapp/fixtures/seeds.json /code/myapp/fixtures/
+RUN python manage.py makemigrations && \
+    python manage.py migrate && \
+    python manage.py loaddata myapp/fixtures/seeds.json
+
+# static files
 RUN sed -i "s#STATIC_URL = '/static/'#STATIC_URL = '/static/'\nSTATIC_ROOT = '/static'#g" ./myproj/settings.py && \
     python manage.py collectstatic
