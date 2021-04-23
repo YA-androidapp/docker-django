@@ -1,4 +1,4 @@
-# docker-django
+# docker-django-allauth
 
 ---
 
