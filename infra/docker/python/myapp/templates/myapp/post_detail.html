@@ -1,0 +1,24 @@
+<!doctype html>
+{% extends "base.html" %}
+
+{% block title %}Profile{% endblock %}
+
+{% block content %}
+<div class="card">
+    <h5 class="card-header">{{ object.title }}</h5>
+    <div class="card-body">
+        <h5 class="card-title">Special title treatment</h5>
+        <p class="card-text">
+        <div class="card p-3 text-right">
+            <p>{{ object.published_at|date }}</p>
+            <p><a href="{% url 'myapp:category_post' object.category.slug %}">{{ object.category.name }}</a></p>
+            {% for tag in object.tags.all %}
+            <a href="{% url 'myapp:tag_post' tag.slug %}">{{ tag.name }}</a>
+            {% endfor %}
+        </div>
+        <hr>
+        {{ object.content|safe }}</p>
+        <a href="{% url 'myapp:index' %}">Back</a>
+    </div>
+</div>
+{% endblock %}

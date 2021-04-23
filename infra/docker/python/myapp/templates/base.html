@@ -36,9 +36,13 @@
     {% block content-header %}{% endblock %}
 
     <!-- Place your content here -->
-    <main role="main">
-        {% block content %}{% endblock %}
-    </main>
+    <div class="container">
+        <main role="main">
+            <div class="py-5">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
 
     {% block content-footer %}{% endblock %}
 

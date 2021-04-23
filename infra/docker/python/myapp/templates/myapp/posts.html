@@ -1,0 +1,34 @@
+{% for post in object_list %}
+{% if user.is_authenticated or post.is_public %}
+<div class="col-md-8 offset-md-2">
+    <div class="card flex-md-row mb-4 box-shadow h-md-250">
+        <div class="card-body d-flex flex-column align-items-start">
+            <h3 class="mb-0">
+                <a class="text-dark" href="#">{% if not post.is_public %}[下書き] {% endif %}{{ post.title }}</a>
+            </h3>
+            <p><a href="{% url 'myapp:category_post' post.category.slug %}"></a>{{ post.category.name }}</a></p>
+            {% for tag in post.tags.all %}
+            <strong class="d-inline-block mb-2 text-success">
+                <a href="{% url 'myapp:tag_post' tag.slug %}">{{ tag.name }}
+                </a>
+                {% if tag.num_posts %}
+                ({{ tag.num_posts }})
+                {% endif %}
+            </strong>
+            {% endfor %}
+            <div class="mb-1 text-muted">{% if post.published_at %}{{ post.published_at }}{% endif %}</div>
+            <p class="card-text mb-auto">{% if post.description %}{{ post.description }}{% endif %}</p>
+            <a href="{% url 'myapp:post_detail' post.id %}">Continue reading</a>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% empty %}
+<div class="col-md-6">
+    <div class="card flex-md-row mb-4 box-shadow h-md-250">
+        <div class="card-body d-flex flex-column align-items-start">
+            まだ投稿はありません。
+        </div>
+    </div>
+</div>
+{% endfor %}

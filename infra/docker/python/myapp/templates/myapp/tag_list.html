@@ -1,0 +1,16 @@
+<!doctype html>
+{% extends "../base.html" %}
+
+{% block title %}タグ一覧{% endblock %}
+
+{% block content %}
+<ul class="list-group list-group-flush">
+    {% for tag in object_list %}
+    <li class="list-group-item">
+        <a href="{% url 'myapp:tag_post' tag.slug %}">{{ tag.name }} ({{ tag.num_posts }})</a>
+    </li>
+    {% empty %}
+    <li class="list-group-item">タグはありません。</li>
+    {% endfor %}
+</ul>
+{% endblock %}

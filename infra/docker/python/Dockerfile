@@ -23,16 +23,21 @@ RUN python manage.py startapp myapp && \
     sed -i "s/'django.contrib.staticfiles',/'django.contrib.staticfiles','myapp.apps.MyappConfig',/g" ./myproj/settings.py && \
     sed -i "s/from django.urls import path/from django.urls import path, include/g" ./myproj/urls.py && \
     sed -i "s#path('admin/', admin.site.urls),#path('admin/', admin.site.urls),\n    path('', include('myapp.urls')),#g" ./myproj/urls.py
-ADD ./infra/docker/python/myapp/urls.py ./infra/docker/python/myapp/views.py /code/myapp/
+ADD ./infra/docker/python/myapp/models.py ./infra/docker/python/myapp/urls.py ./infra/docker/python/myapp/views.py /code/myapp/
 ADD ./infra/docker/python/myapp/templates/*.html /code/myapp/templates/
+ADD ./infra/docker/python/myapp/templates/myapp/*.html /code/myapp/templates/myapp/
+ADD ./infra/docker/python/myapp/fixtures/seeds.json /code/myapp/fixtures/
 
 RUN python manage.py startapp accounts && \
     sed -i "s/'django.contrib.staticfiles',/'django.contrib.staticfiles','accounts.apps.AccountsConfig',/g" ./myproj/settings.py && \
     echo "\nAUTH_USER_MODEL = 'accounts.CustomUser'" >> ./myproj/settings.py && \
-    echo "from .models import CustomUser\n\nadmin.site.register(CustomUser)" >> ./accounts/admin.py
+    echo "from .models import CustomUser\n\nadmin.site.register(CustomUser)" >> ./accounts/admin.py && \
+    echo "from myapp.models import Category, Tag, Post\n\nadmin.site.register(Category)\nadmin.site.register(Tag)\nadmin.site.register(Post)" >> ./accounts/admin.py
 ADD ./infra/docker/python/accounts/*.py /code/accounts/
 RUN python manage.py makemigrations && \
     python manage.py migrate
+
+RUN python manage.py loaddata myapp/fixtures/seeds.json
 
 RUN DJANGO_SUPERUSER_PASSWORD="Passw0rd#" \
     DJANGO_SUPERUSER_USERNAME="Admin" \
