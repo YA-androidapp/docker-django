@@ -14,14 +14,17 @@ services:
     build:
       context: .
       dockerfile: ./infra/docker/python/Dockerfile
-      network: docker-django_appnetwork
+      network: docker-django-allauth_appnetwork
       args:
+        - DATABASE_URL=postgres://postgres:secret@db:5432/postgres
         - POSTGRES_DB=${DB_NAME:-postgres}
         - POSTGRES_USER=${DB_USER:-postgres}
         - POSTGRES_PASSWORD=${DB_PASS:-secret}
     command: python3 manage.py runserver 0.0.0.0:8000
     volumes:
       - code:/code
+    environment:
+      - DATABASE_URL=postgres://postgres:secret@db:5432/postgres
     ports:
       - "80:8000"
     depends_on:

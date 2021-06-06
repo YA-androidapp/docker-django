@@ -35,4 +35,4 @@ app:
 db:
 	docker-compose exec db bash
 sql:
-	docker-compose exec db bash -c 'PGPASSWORD=$$POSTGRES_PASSWORD mysql -U $$POSTGRES_USER -d $$POSTGRES_DB'
+	docker-compose exec db bash -c 'PGPASSWORD=$$POSTGRES_PASSWORD psql -U $$POSTGRES_USER -d $$POSTGRES_DB'

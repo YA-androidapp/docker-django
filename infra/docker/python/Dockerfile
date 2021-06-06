@@ -1,11 +1,13 @@
 FROM python:3
 LABEL maintainer="yaand"
 
+ARG DATABASE_URL
 ARG POSTGRES_DB
 ARG POSTGRES_USER
 ARG POSTGRES_PASSWORD
 
-RUN export POSTGRES_DB=$POSTGRES_DB && \
+RUN export DATABASE_URL=$DATABASE_URL && \
+    export POSTGRES_DB=$POSTGRES_DB && \
     export POSTGRES_USER=$POSTGRES_USER && \
     export POSTGRES_PASSWORD=$POSTGRES_PASSWORD
 
@@ -13,12 +15,32 @@ ENV PYTHONUNBUFFERED 1
 RUN mkdir /code
 WORKDIR /code
 ADD ./infra/docker/python/requirements.txt /code/
-RUN pip install -r requirements.txt
+RUN pip install -r requirements.txt && \
+    pip freeze > requirements.out
+RUN cat requirements.out
 
 # myproj project
 RUN django-admin startproject myproj . && \
-    sed -i "s/'django.db.backends.sqlite3'/'django.db.backends.postgresql'/g" ./myproj/settings.py && \
-    sed -i "s#'NAME': BASE_DIR / 'db.sqlite3'#'NAME': '${POSTGRES_DB}', 'USER': '${POSTGRES_USER}', 'PASSWORD': '${POSTGRES_PASSWORD}', 'HOST': 'db', 'PORT': 5432#g" ./myproj/settings.py
+    sed -i "s/from pathlib import Path/from pathlib import Path\nimport os/g" ./myproj/settings.py && \
+    sed -i "s/# Quick-start/# read the .env file\n# Quick-start/g" ./myproj/settings.py && \
+    sed -i "s/# Quick-start/import environ\n# Quick-start/g" ./myproj/settings.py && \
+    sed -i "s/# Quick-start/env = environ.Env()\n# Quick-start/g" ./myproj/settings.py && \
+    sed -i "s/# Quick-start/if os.path.exists(os.path.join(BASE_DIR, '.env')):\n# Quick-start/g" ./myproj/settings.py && \
+    sed -i "s/# Quick-start/    env.read_env(os.path.join(BASE_DIR, '.env'))\n# Quick-start/g" ./myproj/settings.py && \
+    sed -i "s/DEBUG = True/DEBUG = env('DEBUG', default=True)/g" ./myproj/settings.py && \
+    sed -i "s/# SECURITY WARNING: don't run with debug/SECRET_KEY = env('SECRET_KEY', default=SECRET_KEY)\n\n\n# SECURITY WARNING: don't run with debug/g" ./myproj/settings.py && \
+    sed -i "s/ALLOWED_HOSTS = \[\]/ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=(\['\*'\] if DEBUG else \['localhost', '127.0.0.1']))/g" ./myproj/settings.py && \
+    sed -i "s/    'django.contrib.staticfiles',/    'django.contrib.staticfiles',\n    'import_export',/g" ./myproj/settings.py && \
+    sed -i "s/LANGUAGE_CODE = 'en-us'/LANGUAGE_CODE = 'ja-jp'/g" ./myproj/settings.py && \
+    sed -i "s#TIME_ZONE = 'UTC'#TIME_ZONE = 'Asia/Tokyo'#g" ./myproj/settings.py && \
+    sed -i "s#STATIC_URL = '/static/'#STATIC_URL = '/static/'\nSTATIC_ROOT = os.path.join(BASE_DIR, 'static')#g" ./myproj/settings.py
+
+# RUN sed -i "s|# Password validation|DATABASES = {'default': env.db('DATABASE_URL', default='sqlite:///db.sqlite3')}\n\n\# Password validation|g" ./myproj/settings.py
+RUN sed -i "s|# Password validation|DATABASES = {'default': env.db('DATABASE_URL', default='${DATABASE_URL}')}\n\n\# Password validation|g" ./myproj/settings.py
+# RUN sed -i "s#'NAME': BASE_DIR / 'db.sqlite3'#'NAME': '${POSTGRES_DB}', 'USER': '${POSTGRES_USER}', 'PASSWORD': '${POSTGRES_PASSWORD}', 'HOST': 'db', 'PORT': 5432#g" ./myproj/settings.py
+
+RUN cat ./myproj/settings.py
+RUN echo "DATABASE_URL: $DATABASE_URL"
 
 # accounts app
 RUN python manage.py startapp accounts && \
